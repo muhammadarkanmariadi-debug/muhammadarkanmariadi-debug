@@ -132,10 +132,10 @@ Landing page, auth flow & multi-role dashboard with centralized API service laye
 ## 🐍 Contribution Snake
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/muhammadarkanmariadi-debug/muhammadarkanmariadi-debug/output/github-contribution-grid-snake-dark.svg" width="100%"/>
+<img src="https://raw.githubusercontent.com/muhammadarkanmariadi-debug/muhammadarkanmariadi-debug/output/dist/github-snake-dark.svg" width="100%"/>
 </div>
 
-> To activate the snake animation, add [this GitHub Action](https://github.com/Platane/snk) to your repo — it auto-generates the SVG above from your contribution graph.
+> Generated automatically by the `snake.yml` GitHub Action from your contribution graph, pushed to the `output` branch.
 
 <br/>
 
