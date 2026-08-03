@@ -132,7 +132,7 @@ Landing page, auth flow & multi-role dashboard with centralized API service laye
 ## 🐍 Contribution Snake
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/muhammadarkanmariadi-debug/muhammadarkanmariadi-debug/output/dist/github-snake-dark.svg" width="100%"/>
+<img src="https://raw.githubusercontent.com/muhammadarkanmariadi-debug/muhammadarkanmariadi-debug/output/github-snake-dark.svg" width="100%"/>
 </div>
 
 > Generated automatically by the `snake.yml` GitHub Action from your contribution graph, pushed to the `output` branch.
