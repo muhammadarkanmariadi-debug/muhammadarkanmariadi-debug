@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arkan's Flappy Bird</title>
+<style>
+  :root {
+    --bg-dark: #0B0B12;
+    --indigo: #6C63FF;
+    --teal: #00D9C0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 20%, #16162a 0%, var(--bg-dark) 70%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #e6e6f0;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    background: linear-gradient(90deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  #wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px rgba(108,99,255,0.4), 0 20px 60px rgba(0,0,0,0.6);
+  }
+  canvas { display: block; background: linear-gradient(#12122a, #1a1a2e); }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11,11,18,0.72);
+    text-align: center;
+    gap: 10px;
+    padding: 20px;
+  }
+  #overlay.hidden { display: none; }
+  #overlay button {
+    padding: 10px 22px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--indigo), var(--teal));
+    color: #0B0B12;
+    cursor: pointer;
+  }
+  #overlay button:active { transform: scale(0.97); }
+  #score {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #9a9ab0;
+  }
+  footer {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #666680;
+  }
+</style>
+</head>
+<body>
+  <h1>🐦 Arkan's Flappy Bird</h1>
+  <div id="wrap">
+    <canvas id="game" width="360" height="520"></canvas>
+    <div id="overlay">
+      <div style="font-size:18px;font-weight:600;">Tap / Click / Space to flap</div>
+      <button id="startBtn">Start Game</button>
+    </div>
+  </div>
+  <div id="score">Best: <span id="best">0</span></div>
+  <footer>Built for muhammadarkanmariadi's GitHub profile</footer>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const bestEl = document.getElementById('best');
+
+const W = canvas.width, H = canvas.height;
+let best = Number(localStorage.getItem('flappyBest') || 0);
+bestEl.textContent = best;
+
+const GRAVITY = 0.45;
+const FLAP = -7.6;
+const PIPE_GAP = 150;
+const PIPE_W = 56;
+const PIPE_SPEED = 2.6;
+
+let bird, pipes, frame, score, running, gameOver;
+
+function resetGame() {
+  bird = { x: 80, y: H / 2, vy: 0, r: 14 };
+  pipes = [];
+  frame = 0;
+  score = 0;
+  running = false;
+  gameOver = false;
+}
+
+function spawnPipe() {
+  const margin = 60;
+  const top = margin + Math.random() * (H - PIPE_GAP - margin * 2);
+  pipes.push({ x: W, top, passed: false });
+}
+
+function flap() {
+  if (gameOver) { resetGame(); overlay.classList.add('hidden'); running = true; loop(); return; }
+  if (!running) { running = true; overlay.classList.add('hidden'); loop(); }
+  bird.vy = FLAP;
+}
+
+function update() {
+  frame++;
+  bird.vy += GRAVITY;
+  bird.y += bird.vy;
+
+  if (frame % 90 === 0) spawnPipe();
+
+  pipes.forEach(p => p.x -= PIPE_SPEED);
+  while (pipes.length && pipes[0].x < -PIPE_W) pipes.shift();
+
+  pipes.forEach(p => {
+    if (!p.passed && p.x + PIPE_W < bird.x) {
+      p.passed = true;
+      score++;
+    }
+    const withinX = bird.x + bird.r > p.x && bird.x - bird.r < p.x + PIPE_W;
+    const hitTop = bird.y - bird.r < p.top;
+    const hitBottom = bird.y + bird.r > p.top + PIPE_GAP;
+    if (withinX && (hitTop || hitBottom)) endGame();
+  });
+
+  if (bird.y + bird.r > H || bird.y - bird.r < 0) endGame();
+}
+
+function endGame() {
+  gameOver = true;
+  running = false;
+  if (score > best) {
+    best = score;
+    localStorage.setItem('flappyBest', best);
+    bestEl.textContent = best;
+  }
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <div style="font-size:20px;font-weight:700;color:#00D9C0;">Game Over</div>
+    <div style="font-size:15px;">Score: ${score} &nbsp;|&nbsp; Best: ${best}</div>
+    <button id="startBtn">Play Again</button>
+  `;
+  document.getElementById('startBtn').addEventListener('click', flap);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // pipes
+  ctx.fillStyle = '#6C63FF';
+  pipes.forEach(p => {
+    ctx.fillRect(p.x, 0, PIPE_W, p.top);
+    ctx.fillRect(p.x, p.top + PIPE_GAP, PIPE_W, H - p.top - PIPE_GAP);
+    ctx.fillStyle = '#00D9C0';
+    ctx.fillRect(p.x - 4, p.top - 14, PIPE_W + 8, 14);
+    ctx.fillRect(p.x - 4, p.top + PIPE_GAP, PIPE_W + 8, 14);
+    ctx.fillStyle = '#6C63FF';
+  });
+
+  // bird
+  ctx.save();
+  ctx.translate(bird.x, bird.y);
+  ctx.rotate(Math.max(-0.5, Math.min(0.9, bird.vy / 10)));
+  ctx.fillStyle = '#00D9C0';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, bird.r, bird.r - 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFB800';
+  ctx.beginPath();
+  ctx.moveTo(bird.r - 2, -2);
+  ctx.lineTo(bird.r + 10, 0);
+  ctx.lineTo(bird.r - 2, 4);
+  ctx.fill();
+  ctx.fillStyle = '#0B0B12';
+  ctx.beginPath();
+  ctx.arc(4, -4, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // score
+  ctx.fillStyle = '#e6e6f0';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(score, W / 2, 50);
+}
+
+function loop() {
+  if (!running) return;
+  update();
+  draw();
+  if (running) requestAnimationFrame(loop);
+}
+
+resetGame();
+draw();
+
+startBtn.addEventListener('click', flap);
+document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); flap(); } });
+canvas.addEventListener('click', flap);
+</script>
+</body>
+</html>
